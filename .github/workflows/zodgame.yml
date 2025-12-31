@@ -2,23 +2,45 @@ name: zodgame
 
 on:
   schedule:
-  - cron: "0 0 * * *"
-  
+    - cron: "0 0 * * *"
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-    
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
+    
     - name: Install requirements
       run: |
         pip3 install -r ./zodgame/requirements.txt
-    - name: Run 
+        
+    - name: Run
       run: |
         python3 ./zodgame/zodgame.py "${{secrets.ZODGAME_COOKIE}}"
+
+    # --- ✅ Success Notification ---
+    - name: Send Gotify Notification on Success
+      if: success()
+      shell: bash
+      run: |
+        curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" \
+        -F "title=ZodGame Checkin Success" \
+        -F "message=Daily checkin task completed successfully." \
+        -F "priority=5"
+
+    # --- 🚨 Failure Notification ---
+    - name: Send Gotify Notification on Failure
+      if: failure()
+      shell: bash
+      run: |
+        curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" \
+        -F "title=ZodGame Checkin Failed" \
+        -F "message=Script execution failed. Please check GitHub Actions logs." \
+        -F "priority=8"
+
     - uses: liskin/gh-workflow-keepalive@main
