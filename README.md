@@ -1,3 +1,12 @@
+# Actions secrets and variables
+## Repository secrets
+
+`ZODGAME_COOKIE` = Cookie
+
+`GOTIFY_URL` = URL
+
+`GOTIFY_TOKEN` = TOKEN
+
 # zodgame_checkin
 Zodgame automatic check-in using github action
 
