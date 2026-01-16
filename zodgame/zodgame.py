@@ -2,7 +2,8 @@
 import io
 import re
 import sys
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='utf-8')
+# 强制标准输出为 UTF-8，防止控制台打印中文乱码
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 import undetected_chromedriver as uc
 from selenium.webdriver.support.ui import WebDriverWait
@@ -25,7 +26,7 @@ def zodgame_checkin(driver, formhash):
     checkin_query = checkin_query.replace("\n", "")
     driver.set_script_timeout(240)
     resp = driver.execute_script("return " + checkin_query)
-    match = re.search('<div class="c">\r\n(.*?)</div>\r\n', resp["response"], re.S)
+    match = re.search(r'<div class="c">\r\n(.*?)</div>\r\n', resp["response"], re.S)
     message = match[1] if match is not None else "签到失败"
     print(f"【签到】{message}")
     return "恭喜你签到成功!" in message or "您今日已经签到，请明天再来" in message
@@ -78,9 +79,11 @@ def zodgame_task(driver, formhash):
     for idx, a in enumerate(join_task_a):
         on_click = a.get_attribute("onclick")
         try:
-            function = re.search("""openNewWindow(.*?)\(\)""", on_click, re.S)[0]
+            # 添加 r 前缀修复正则转义警告
+            function = re.search(r"""openNewWindow(.*?)\(\)""", on_click, re.S)[0]
             script = driver.find_element(By.XPATH, f'//script[contains(text(), "{function}")]').get_attribute("text")
-            task_url = re.search("""window.open\("(.*)", "newwindow"\)""", script, re.S)[1]
+            # 添加 r 前缀修复正则转义警告
+            task_url = re.search(r"""window.open\("(.*)", "newwindow"\)""", script, re.S)[1]
             driver.execute_script(f"""window.open("https://zodgame.xyz/{task_url}")""")
             driver.switch_to.window(driver.window_handles[-1])
             try:
@@ -92,7 +95,8 @@ def zodgame_task(driver, formhash):
                 pass
 
             try:     
-                check_url = re.search("""showWindow\('check', '(.*)'\);""", on_click, re.S)[1]
+                # 添加 r 前缀修复正则转义警告
+                check_url = re.search(r"""showWindow\('check', '(.*)'\);""", on_click, re.S)[1]
                 driver.get(f"https://zodgame.xyz/{check_url}")
                 WebDriverWait(driver, 240).until(
                     lambda x: len(x.find_elements(By.XPATH, '//p[contains(text(), "检查成功, 积分已经加入您的帐户中")]')) != 0 
@@ -116,8 +120,12 @@ def zodgame_task(driver, formhash):
 def zodgame(cookie_string):
     options = uc.ChromeOptions()
     options.add_argument("--disable-popup-blocking")
-    driver = uc.Chrome(driver_executable_path = """C:\SeleniumWebDrivers\ChromeDriver\chromedriver.exe""",
-                       browser_executable_path = """C:\Program Files\Google\Chrome\Application\chrome.exe""",
+    
+    # 添加 r 前缀修复路径转义警告
+    # 注意：如果 GitHub Actions 上路径不同，undetected-chromedriver 通常能自动找到 Chrome，
+    # 这里保留原代码的路径配置，仅修复语法警告。
+    driver = uc.Chrome(driver_executable_path = r"""C:\SeleniumWebDrivers\ChromeDriver\chromedriver.exe""",
+                       browser_executable_path = r"""C:\Program Files\Google\Chrome\Application\chrome.exe""",
                        options = options)
 
     # Load cookie
