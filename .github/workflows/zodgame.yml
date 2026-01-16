@@ -23,24 +23,30 @@ jobs:
       run: |
         python3 ./zodgame/zodgame.py "${{secrets.ZODGAME_COOKIE}}"
 
-    # --- ✅ Success Notification ---
+    # --- ✅ Success Notification (PowerShell) ---
     - name: Send Gotify Notification on Success
       if: success()
-      shell: bash
+      shell: pwsh
       run: |
-        curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" \
-        -F "title=ZodGame Checkin Success" \
-        -F "message=Daily checkin task completed successfully." \
-        -F "priority=5"
+        $params = @{
+            title    = "ZodGame 签到成功"
+            message  = "每日签到任务已成功完成。"
+            priority = 5
+        }
+        $url = "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}"
+        Invoke-RestMethod -Uri $url -Method Post -Body $params
 
-    # --- 🚨 Failure Notification ---
+    # --- 🚨 Failure Notification (PowerShell) ---
     - name: Send Gotify Notification on Failure
       if: failure()
-      shell: bash
+      shell: pwsh
       run: |
-        curl -X POST "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}" \
-        -F "title=ZodGame Checkin Failed" \
-        -F "message=Script execution failed. Please check GitHub Actions logs." \
-        -F "priority=8"
+        $params = @{
+            title    = "ZodGame 签到失败"
+            message  = "脚本执行出错，请检查 GitHub Actions 日志。"
+            priority = 8
+        }
+        $url = "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}"
+        Invoke-RestMethod -Uri $url -Method Post -Body $params
 
     - uses: liskin/gh-workflow-keepalive@main
