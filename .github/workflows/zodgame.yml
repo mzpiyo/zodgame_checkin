@@ -15,6 +15,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
+    # --- 🔧 修复核心：指定 Python 3.11 (避免 3.12 缺少 distutils 导致报错) ---
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11' 
+    
     - name: Install requirements
       run: |
         pip3 install -r ./zodgame/requirements.txt
@@ -23,7 +29,7 @@ jobs:
       run: |
         python3 ./zodgame/zodgame.py "${{secrets.ZODGAME_COOKIE}}"
 
-    # --- ✅ Success Notification (PowerShell) ---
+    # --- ✅ 成功通知 (PowerShell 解决乱码) ---
     - name: Send Gotify Notification on Success
       if: success()
       shell: pwsh
@@ -36,7 +42,7 @@ jobs:
         $url = "${{ secrets.GOTIFY_URL }}/message?token=${{ secrets.GOTIFY_TOKEN }}"
         Invoke-RestMethod -Uri $url -Method Post -Body $params
 
-    # --- 🚨 Failure Notification (PowerShell) ---
+    # --- 🚨 失败通知 (PowerShell 解决乱码) ---
     - name: Send Gotify Notification on Failure
       if: failure()
       shell: pwsh
